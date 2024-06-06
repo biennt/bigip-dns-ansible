@@ -14,14 +14,12 @@
         provider: "{{ provider }}"
         module: mgmt
         memory: medium
-      delegate_to: localhost
     
     - name: Provision DNS with nominal level.
       bigip_provision:
         provider: "{{ provider }}"
         module: gtm
         level: nominal
-      delegate_to: localhost
     
     - name: Set the DNS settings on the BIG-IP
       bigip_device_dns:
@@ -29,7 +27,6 @@
         name_servers:
           - "{{ nameserver1 }}"
           - "{{ nameserver2 }}"
-      delegate_to: localhost
      
     - name: Set the timezone settings on the BIG-IP
       bigip_device_ntp:
@@ -38,7 +35,6 @@
         ntp_servers:
           - "{{ ntpserver1 }}"
           - "{{ ntpserver2 }}"
-      delegate_to: localhost
 
     - name: Set the banner for the SSHD service
       bigip_device_sshd:
@@ -48,7 +44,6 @@
         allow:
           - 10.*.*.*
           - 192.168.*.*
-      delegate_to: localhost
 
     - name: Set the BIG-IP HTTPD service
       bigip_device_httpd:
@@ -63,7 +58,6 @@
           - -SSLv2
           - -SSLv3
           - -TLSv1
-      delegate_to: localhost
 
     - name: Add another user as admin
       bigip_user:
@@ -76,7 +70,6 @@
         update_password: always
         shell: bash
         state: present
-      delegate_to: localhost
 
     - name: Fix the VTAdmin password
       bigip_user:
@@ -93,7 +86,6 @@
         name: internal_ip
         netmask: 255.255.255.0
         vlan: internal
-      delegate_to: localhost
       
     - name: Create external self ip
       bigip_selfip:
@@ -102,7 +94,6 @@
         name: external_ip
         netmask: 255.255.255.0
         vlan: external
-      delegate_to: localhost
 
     - name: Create default route
       bigip_static_route:
@@ -111,7 +102,6 @@
         netmask: 0.0.0.0
         gateway_address: 10.1.10.2
         name: default-route
-      delegate_to: localhost
 
     - name: Create a validating resolver cache object
       bigip_command:
@@ -119,7 +109,6 @@
         commands: 
           - delete ltm dns cache validating-resolver validating_resolver
           - create ltm dns cache validating-resolver validating_resolver
-      delegate_to: localhost
       
     - name: Create a DNS Profile
       bigip_profile_dns:
@@ -133,7 +122,6 @@
         process_recursion_desired: true
         unhandled_query_action: reject
         use_local_bind: false
-      delegate_to: localhost
       
     - name: Create DNS UDP Listener
       bigip_command:
@@ -141,4 +129,3 @@
         commands: 
           - delete gtm listener vs_dns_53_udp
           - create gtm listener vs_dns_53_udp address 10.1.20.4 ip-protocol udp mask 255.255.255.255 port 53 profiles add { validating_resolver_profile } vlans add { internal } vlans-enabled
-      delegate_to: localhost
