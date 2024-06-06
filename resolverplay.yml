@@ -1,0 +1,144 @@
+---
+- name: Setting up a BIG-IP DNS Resolver
+  hosts: all
+  connection: local
+  vars_files: vars.yml
+  
+####################################################
+
+  tasks:
+        
+
+    - name: Provision mgmt with medium amount of memory.
+      bigip_provision:
+        provider: "{{ provider }}"
+        module: mgmt
+        memory: medium
+      delegate_to: localhost
+    
+    - name: Provision DNS with nominal level.
+      bigip_provision:
+        provider: "{{ provider }}"
+        module: gtm
+        level: nominal
+      delegate_to: localhost
+    
+    - name: Set the DNS settings on the BIG-IP
+      bigip_device_dns:
+        provider: "{{ provider }}"
+        name_servers:
+          - "{{ nameserver1 }}"
+          - "{{ nameserver2 }}"
+      delegate_to: localhost
+     
+    - name: Set the timezone settings on the BIG-IP
+      bigip_device_ntp:
+        provider: "{{ provider }}"
+        timezone: "{{ timezone }}"
+        ntp_servers:
+          - "{{ ntpserver1 }}"
+          - "{{ ntpserver2 }}"
+      delegate_to: localhost
+
+    - name: Set the banner for the SSHD service
+      bigip_device_sshd:
+        provider: "{{ provider }}"
+        banner: enabled
+        banner_text: "{{ banner_ssh }}"
+        allow:
+          - 10.*.*.*
+          - 192.168.*.*
+      delegate_to: localhost
+
+    - name: Set the BIG-IP HTTPD service
+      bigip_device_httpd:
+        provider: "{{ provider }}"
+        auth_name: Viettel DNS Caching System
+        auth_pam_validate_ip: false
+        allow:
+          - 10.*.*.*
+          - 192.168.*.*
+        ssl_protocols:
+          - all
+          - -SSLv2
+          - -SSLv3
+          - -TLSv1
+      delegate_to: localhost
+
+    - name: Add another user as admin
+      bigip_user:
+        provider: "{{ provider }}"
+        username_credential: "{{ newadmin }}"
+        password_credential: "{{ newadminpassword }}"
+        full_name: "{{ newadminfullname }}"
+        partition_access:
+          - all:admin
+        update_password: always
+        shell: bash
+        state: present
+      delegate_to: localhost
+
+    - name: Fix the VTAdmin password
+      bigip_user:
+        provider: "{{ provider }}"
+        username_credential: "{{ newadmin }}"
+        password_credential: "{{ newadminpassword }}"
+        state: present
+      delegate_to: localhost
+      
+    - name: Create internal self ip
+      bigip_selfip:
+        provider: "{{ provider }}"
+        address: 10.1.20.3
+        name: internal_ip
+        netmask: 255.255.255.0
+        vlan: internal
+      delegate_to: localhost
+      
+    - name: Create external self ip
+      bigip_selfip:
+        provider: "{{ provider }}"
+        address: 10.1.10.3
+        name: external_ip
+        netmask: 255.255.255.0
+        vlan: external
+      delegate_to: localhost
+
+    - name: Create default route
+      bigip_static_route:
+        provider: "{{ provider }}"
+        destination: 0.0.0.0
+        netmask: 0.0.0.0
+        gateway_address: 10.1.10.2
+        name: default-route
+      delegate_to: localhost
+
+    - name: Create a validating resolver cache object
+      bigip_command:
+        provider: "{{ provider }}"
+        commands: 
+          - delete ltm dns cache validating-resolver validating_resolver
+          - create ltm dns cache validating-resolver validating_resolver
+      delegate_to: localhost
+      
+    - name: Create a DNS Profile
+      bigip_profile_dns:
+        provider: "{{ provider }}"
+        name: validating_resolver_profile
+        enable_dns_express: false
+        enable_dnssec: false
+        enable_gtm: false
+        enable_cache: true
+        cache_name: validating_resolver
+        process_recursion_desired: true
+        unhandled_query_action: reject
+        use_local_bind: false
+      delegate_to: localhost
+      
+    - name: Create DNS UDP Listener
+      bigip_command:
+        provider: "{{ provider }}"
+        commands: 
+          - delete gtm listener vs_dns_53_udp
+          - create gtm listener vs_dns_53_udp address 10.1.20.4 ip-protocol udp mask 255.255.255.255 port 53 profiles add { validating_resolver_profile } vlans add { internal } vlans-enabled
+      delegate_to: localhost
