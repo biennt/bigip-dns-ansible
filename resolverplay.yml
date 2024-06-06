@@ -71,7 +71,7 @@
         shell: bash
         state: present
 
-    - name: Fix the VTAdmin password
+    - name: Fix the new admin password
       bigip_user:
         provider: "{{ provider }}"
         username_credential: "{{ newadmin }}"
