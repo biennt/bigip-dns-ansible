@@ -3,11 +3,9 @@
   hosts: all
   connection: local
   vars_files: vars.yml
-  
 ####################################################
 
   tasks:
-        
 
     - name: Provision mgmt with medium amount of memory.
       bigip_provision:
@@ -41,9 +39,7 @@
         provider: "{{ provider }}"
         banner: enabled
         banner_text: "{{ banner_ssh }}"
-        allow:
-          - 10.*.*.*
-          - 192.168.*.*
+        allow: "{{ allow_net }}"
 
     - name: Set the BIG-IP HTTPD service
       bigip_device_httpd:
