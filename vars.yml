@@ -1,0 +1,37 @@
+  provider:
+    password: "fYvN!z$a3nR%#t8uT9SsF7"
+    server: 192.168.31.3
+    user: admin
+    validate_certs: no
+    server_port: 443
+
+  nameserver1: 8.8.8.8
+  nameserver2: 1.1.1.1
+
+  ntpserver1: 0.asia.pool.ntp.org
+  ntpserver2: 1.asia.pool.ntp.org
+  timezone: "Asia/Saigon"
+
+  banner_ssh: "Day la tai san cua ABC, truy cap trai phep la bi cam."
+  
+  newadmin: superadmin
+  newadminpassword: 'fYvN!z$a3nR%#t8uT9SsF7'
+  newadminfullname: 'Super Admin'
+  
+  allow_net:
+    - 10.*.*.*
+    - 192.168.*.*
+    - 172.16.*.* 
+ 
+  internal_self_name: "internal_ip"
+  internal_self_address: "10.1.20.3"
+  internal_self_mask: "255.255.255.0"
+  internal_self_vlan: "internal"
+
+  internal_self_name: "internal_ip"
+  internal_self_address: "10.1.20.3"
+  internal_self_mask: "255.255.255.0"
+  internal_self_vlan: "internal"
+
+
+
